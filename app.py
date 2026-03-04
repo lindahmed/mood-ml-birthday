@@ -414,15 +414,13 @@ if not st.session_state.entered:
         max_value=date(2010, 12, 31),
         value=date(2000, 1, 1)
     )
-    
-if st.button("Enter"):
-    if birthday == CORRECT_BIRTHDAY:    
-        st.session_state.entered = True
-        st.rerun()
-    else:
-        st.error("NOOOO TRY AGAIN DUMMY!😡")
-        
-st.stop()
+    if st.button("Enter"):
+        if birthday == CORRECT_BIRTHDAY:
+            st.session_state.entered = True
+            st.rerun()
+        else:
+            st.error("Are u serious? TRY AGAIN! 😡")
+    st.stop()
 
 # -----------------------------
 # NAVIGATION
