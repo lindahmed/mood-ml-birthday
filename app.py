@@ -308,6 +308,12 @@ love_letters = [
      """This one is a reminder, reminding you that i will always love you, 
      always grateful for having you and nothing will ever be as special as you are to me🫂
      """,
+      """Reminder: htfdal dyman aghla w a7la 7aga 7asltly ya mina❤️
+     """,
+       """ You will always be my favourite smile, plssss dont stop smiling everrrr🥹
+     """,
+        """ Reminder: Tote mafesh a7la menak fel donia wala ashtar menak, if u r feeling down pls dont myl u r doing perfect🫂
+     """,
 
     """Dear loml,
 I love the way your eyes light up when you talk about something you care about, the wayyou smile and look me in the eyes when we both know we want to kiss so much. And I adore the smell of all of your perfumes and scents.
@@ -335,8 +341,7 @@ You are my favorite chapter in life.
 
     """To my baby,
 I hope you know that you are somebody's reason to smile every single day.
-You are enough and you are so so loved. I wish I could give you the whole world as a gift,
-just to show how thankful i am for you.
+You are enough and you are so so loved. I wish I could give you the whole world as a gift, just to show how thankful i am for you.
 Never forget that.
 """
 ]
@@ -344,52 +349,126 @@ Never forget that.
 
 
 # -----------------------------
-# MOOD ANALYSIS
+# MOOD ANALYSIS — ANN MODEL
 # -----------------------------
-def analyze_mood(text):
-    blob = TextBlob(text)
-    polarity = blob.sentiment.polarity
-    subjectivity = blob.sentiment.subjectivity
-    return polarity, subjectivity
+from textblob import TextBlob
+from sklearn.neural_network import MLPClassifier
 
-def mood_response(polarity):
-    if polarity < -0.5:
-        return {
-            "type": "Devastated",
-            "affirmation": "Just take a deep breath... Remeber nothing deserves to be angry. ",
-            "action": "Drink some water and breathe slowly till you are calm."
-            
-        }
-    elif polarity < -0.3:
-        return {
-            "type": "Sad",
-            "affirmation": "You don't have to carry everything alone.",
-            "action": "Wrap yourself in something warm and breathe slowly."
-        }
-    elif polarity < -0.1:
-        return {
-            "type": "Anxious",
-            "affirmation": "Everything will be okay i promise.",
-            "action": "Call me!!!"
-        }
-    elif polarity < 0:
-        return {
-            "type": "Low Energy",
-            "affirmation": "It's okay to move gently today.",
-            "action": "Drink water and take a small break."
-        }
-    elif polarity < 0.4:
-        return {
-            "type": "Good",
-            "affirmation": "Steady days are the best days.",
-            "action": "Do one small thing that makes you smile."
-        }
-    else:
-        return {
-            "type": "Happy",
-            "affirmation": "Your energy is beautiful today.",
-            "action": "Channel that into something creative."
-        }
+MOOD_LABELS = ["Devastated", "Sad", "Anxious", "Low Energy", "Good", "Happy"]
+
+MOOD_RESPONSES = {
+    "Devastated": {
+        "affirmation": "Just take a deep breath... nothing deserves to break you.",
+        "action": "Drink some water and breathe slowly till you are calm."
+    },
+    "Sad": {
+        "affirmation": "You don't have to carry everything alone.",
+        "action": "Wrap yourself in something warm and breathe slowly."
+    },
+    "Anxious": {
+        "affirmation": "Everything will be okay i promise.",
+        "action": "Call me!!!"
+    },
+    "Low Energy": {
+        "affirmation": "It's okay to move gently today.",
+        "action": "Drink water and take a small break."
+    },
+    "Good": {
+        "affirmation": "I hope all your days are as good as now.",
+        "action": "Do one small thing that makes you smile."
+    },
+    "Happy": {
+        "affirmation": "Your energy is beautiful today.",
+        "action": "YAY, we are happy. Try to use the good energy in something useful"
+    }
+}
+
+@st.cache_resource
+def train_mood_ann():
+    X = np.array([
+        # Devastated (polarity, subjectivity, word_count, exclamation, question)
+        [-0.9, 0.9, 0.4, 0, 0], [-0.8, 0.8, 0.3, 0, 0], [-0.7, 0.9, 0.5, 0, 1],
+        [-0.85, 0.7, 0.36, 0, 0], [-0.75, 0.85, 0.44, 0, 1],
+        [-0.95, 0.95, 0.5, 0, 0], [-0.88, 0.82, 0.42, 0, 0],
+        [-0.72, 0.91, 0.38, 0, 1], [-0.83, 0.76, 0.46, 0, 0],
+        [-0.91, 0.88, 0.52, 0, 1], [-0.78, 0.93, 0.34, 0, 0],
+        [-0.86, 0.79, 0.48, 0, 1], [-0.69, 0.87, 0.41, 0, 0],
+
+        # Sad
+        [-0.5, 0.7, 0.3, 0, 0], [-0.4, 0.6, 0.24, 0, 1], [-0.45, 0.75, 0.36, 0, 0],
+        [-0.35, 0.65, 0.2, 0, 0], [-0.5, 0.8, 0.4, 0, 1],
+        [-0.55, 0.72, 0.32, 0, 0], [-0.42, 0.68, 0.26, 0, 0],
+        [-0.48, 0.77, 0.38, 0, 1], [-0.38, 0.63, 0.22, 0, 0],
+        [-0.52, 0.74, 0.34, 0, 1], [-0.46, 0.69, 0.28, 0, 0],
+        [-0.36, 0.71, 0.42, 0, 1], [-0.53, 0.66, 0.30, 0, 0],
+
+        # Anxious
+        [-0.2, 0.8, 0.6, 1, 1], [-0.15, 0.9, 0.5, 1, 1], [-0.25, 0.7, 0.56, 0, 1],
+        [-0.1, 0.85, 0.7, 1, 1], [-0.2, 0.75, 0.44, 0, 1],
+        [-0.18, 0.82, 0.62, 1, 1], [-0.22, 0.88, 0.54, 0, 1],
+        [-0.12, 0.78, 0.66, 1, 1], [-0.28, 0.84, 0.48, 0, 1],
+        [-0.16, 0.91, 0.58, 1, 1], [-0.24, 0.73, 0.64, 0, 1],
+        [-0.19, 0.86, 0.52, 1, 1], [-0.14, 0.79, 0.68, 1, 1],
+
+        # Low Energy
+        [-0.1, 0.5, 0.16, 0, 0], [-0.05, 0.4, 0.12, 0, 0], [-0.08, 0.6, 0.2, 0, 0],
+        [-0.03, 0.45, 0.14, 0, 0], [-0.09, 0.55, 0.18, 0, 0],
+        [-0.07, 0.42, 0.15, 0, 0], [-0.04, 0.52, 0.13, 0, 0],
+        [-0.06, 0.48, 0.17, 0, 0], [-0.02, 0.38, 0.11, 0, 0],
+        [-0.11, 0.58, 0.19, 0, 0], [-0.01, 0.44, 0.16, 0, 0],
+        [0.0,  0.35, 0.10, 0, 0], [0.01,  0.41, 0.14, 0, 0],
+
+        # Good
+        [0.2, 0.5, 0.24, 0, 0], [0.3, 0.6, 0.3, 0, 0], [0.25, 0.55, 0.2, 0, 0],
+        [0.35, 0.5, 0.36, 0, 0], [0.15, 0.45, 0.28, 0, 0],
+        [0.22, 0.52, 0.26, 0, 0], [0.32, 0.58, 0.32, 0, 0],
+        [0.28, 0.48, 0.22, 0, 0], [0.18, 0.54, 0.34, 0, 0],
+        [0.38, 0.62, 0.38, 0, 0], [0.42, 0.56, 0.30, 0, 0],
+        [0.45, 0.51, 0.27, 0, 0], [0.40, 0.49, 0.33, 0, 0],
+
+        # Happy
+        [0.8, 0.7, 0.4, 1, 0], [0.9, 0.8, 0.5, 1, 0], [0.7, 0.6, 0.36, 1, 0],
+        [0.85, 0.75, 0.44, 1, 0], [0.75, 0.65, 0.32, 1, 0],
+        [0.82, 0.72, 0.42, 1, 0], [0.88, 0.78, 0.48, 1, 0],
+        [0.76, 0.68, 0.38, 1, 0], [0.92, 0.82, 0.52, 1, 0],
+        [0.78, 0.74, 0.46, 1, 0], [0.86, 0.76, 0.40, 1, 0],
+        [0.94, 0.84, 0.54, 1, 0], [0.72, 0.62, 0.34, 1, 0],
+    ])
+
+    y = np.array([0]*13 + [1]*13 + [2]*13 + [3]*13 + [4]*13 + [5]*13)
+
+    model = MLPClassifier(
+        hidden_layer_sizes=(64, 128, 64),  # bigger network
+        activation='relu',
+        max_iter=2000,                     # more training
+        random_state=42,
+        learning_rate='adaptive',          # smarter learning rate
+        early_stopping=True,               # stops when it peaks
+        validation_fraction=0.15
+    )
+    model.fit(X, y)
+    return model
+
+mood_ann = train_mood_ann()
+
+def extract_features(text):
+    import re
+    clean_text = re.sub(r'(.)\1{2,}', r'\1', text)
+    blob = TextBlob(clean_text)
+    polarity     = blob.sentiment.polarity
+    subjectivity = blob.sentiment.subjectivity
+    word_count   = min(len(clean_text.split()) / 50, 1.0)
+    exclamation  = min(text.count('!') / 3, 1.0)
+    question     = min(text.count('?') / 3, 1.0)
+    return np.array([[polarity, subjectivity, word_count, exclamation, question]])
+
+def analyze_mood(text):
+    features = extract_features(text)
+    probs     = mood_ann.predict_proba(features)[0]
+    mood_idx  = int(np.argmax(probs))
+    confidence = float(probs[mood_idx]) * 100
+    blob = TextBlob(text)
+    return mood_idx, confidence, blob.sentiment.polarity, blob.sentiment.subjectivity
 
 # -----------------------------
 # LANDING
@@ -402,7 +481,7 @@ if not st.session_state.entered:
     st.markdown("""
 <p class='typewriter' style='animation-delay: 0s'>This is a small gift for u loml...</p>
 <p class='typewriter' style='animation-delay: 3s'>I wanted to say Happy Birthday in the most special way...</p>
-<p class='typewriter' style='animation-delay: 6s'>So, Happy birthday to my favourit human on earth❤️</p>
+<p class='typewriter' style='animation-delay: 6s'>So, Happy 21st birthday to my favourite human on earth❤️</p>
 """, unsafe_allow_html=True)
 
     from datetime import date
@@ -510,7 +589,7 @@ if page == "🎂 Happy Birthday":
     <span class='bday-name'>my love 🎂</span>
     <p class='bday-message' style ='font-size: 20px;'>
         Another year of you existing in this world<br>
-        and somehow I still can't believe I get to be yours.
+        and somehow I still can't believe we have made it this far.
     </p>
     <div class='bday-card'>
         <div class='bday-wishes'>
@@ -518,7 +597,10 @@ if page == "🎂 Happy Birthday":
                 On this special day I wanted to make u a special gift to show you how much you mean to me, 
                 and I dont even think it will ever be enough to express my feelings for you! 
                 Mina, you mean the whole world to me. You are the reason I smile, laugh and find hope in the little things we do.
-                I truly wish you the happiest birthday ever, a one where you feel the most loved because you are.
+                Our relationship is the one thing i will always remember till the day i die, it holds so much memories and meaning.
+                Minaaaa enta mn aktr el hagat el bgd mfesh menha etnen fel donia, this love won't ever be replaced mahma hasal fel hyah w aked
+                msh hygy zyo!! ana msh 3arfa ezay enta bgd had helw awy kda mn bara w mn gwa w bgd u r perfect in every single thing a human can do.
+                lw a3adt a3ed momyzatk msh hakhlas bs bgd u r one of a kind ya toteee.I truly wish you the happiest birthday ever, a one where you feel the most loved because you are.
                 Wishing you the happiest life as well, a life that we both dream of. 
                 No words will ever be enough for you, I feel like I want to keep writing till tomorrow.
                 But i will leave the rest of my feelings for other letters and more reminders for you, that you have my whole heart forever and always.
@@ -545,32 +627,46 @@ elif page == "💌 Love Letter Generator":
         letter = random.choice(love_letters)
         st.markdown(f"<div class='glass' style='white-space: pre-line;'>{letter}</div>", unsafe_allow_html=True)
 
-# -----------------------------
-# 🐾 Mood Care
-# -----------------------------
+
+
 elif page == "🐾 Mood Care Companion":
     st.header("Mood Analysis Engine")
-    text = st.text_area("Describe how you feel")
+    text = st.text_area("Describe how you feel... (write a few sentences for best results 🩵)")
 
     if st.button("Analyze Mood"):
-        polarity, subjectivity = analyze_mood(text)
-        result = mood_response(polarity)
+        mood_idx, confidence, polarity, subjectivity = analyze_mood(text)
+        mood_type = MOOD_LABELS[mood_idx]
+        result = MOOD_RESPONSES[mood_type]
+
         cat_gifs = {
-            "Happy": "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif",
-            "Sad": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExN3YwbTFtbTVreGIzejVtMmU4NHVnMXdqd2N6dDk3bDY4N29rNHp6dSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/MDJ9IbxxvDUQM/giphy.gif",
-            "Low Energy": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOXN0b3Nma3JkYWhuenZsbWlvNHRhc2p5NzVmM3B6bDljdTF1eXIwMiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3SeYw59KBJGXJzKvBq/giphy.gif",
-            "Neutral": "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3czRzczd1cWdlaWllejdhNXU2OGZ1bWFlZzgzYXR5N2Fwb2NyYXdxZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/29czd4FQNdnkJZ1npy/giphy.gif",
+            "Happy":      "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif",
+            "Sad":        "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNGJrdnlleXh4YWlpdjlmYWRzYXZlNHVoNDJhbjl2cmJiOGt4OWF3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/fFa05KbZowXiEIyRse/giphy.gif",
+            "Low Energy": "https://media.giphy.com/media/3SeYw59KBJGXJzKvBq/giphy.gif",
+            "Good":       "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3czczeDh1azJoOWp3Nm5zMTdoZ242Z2pzbmZzM3ZtMHo3bnB1cjI3MCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/15UbO1LY4O2Fxw8gnI/giphy.gif",
+            "Devastated": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNGJrdnlleXh4YWlpdjlmYWRzYXZlNHVoNDJhbjl2cmJiOGt4OWF3ayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/901mxGLGQN2PyCQpoc/giphy.gif",
+            "Anxious":    "https://media.giphy.com/media/3SeYw59KBJGXJzKvBq/giphy.gif",
         }
-        gif_url = cat_gifs.get(result["type"], cat_gifs["Neutral"])
+        gif_url = cat_gifs.get(mood_type, cat_gifs["Good"])
+
+        # Confidence bar colors
+        bar_color = {
+            "Happy": "#02c39a", "Good": "#00a896",
+            "Neutral": "#008080", "Low Energy": "#006666",
+            "Anxious": "#FF8C69", "Sad": "#6495ED", "Devastated": "#4169E1"
+        }.get(mood_type, "#02c39a")
 
         st.markdown(f"""
 <div class='glass' style='display:flex; align-items:center; gap:20px;'>
     <img src='{gif_url}' width='150' style='border-radius:12px;'>
-    <div>
-        <b>Detected Mood:</b> {result['type']}<br>
+    <div style='flex:1'>
+        <b>The Ai thinks you are:</b> {mood_type}<br>
+         <div style='flex:1'>
+        <b>Percentage of the model :</b> {confidence:.1f}%<br>
+        <div style='background:rgba(0,0,0,0.2); border-radius:10px; margin:6px 0 10px 0; height:10px;'>
+            <div style='width:{confidence}%; background:{bar_color}; height:10px; border-radius:10px; transition:width 1s ease;'></div>
+        </div>
         <b>Affirmation:</b> {result['affirmation']}<br>
-        <b>Action:</b> {result['action']}<br>
-        <b>Cat Wisdom:</b> {result['cat']}
+        <b>Action:</b> {result['action']}
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -579,18 +675,61 @@ elif page == "🐾 Mood Care Companion":
 # 😼 Compatibility Analyzer
 # -----------------------------
 elif page == "😼 Compatibility Analyzer":
-    st.header("Compatibility Prediction Model")
+    st.header("How Compatible Are We Right Now? 🩵")
+    st.markdown("<p style='text-align:center; color:#e0ffff; opacity:0.8;'>be honest...</p>", unsafe_allow_html=True)
 
-    mood_val = st.slider("Mood Level", 0.0, 1.0, 0.7)
-    sleep = st.slider("Sleep Quality", 0.0, 1.0, 0.8)
-    hunger = st.slider("Hunger Level", 0.0, 1.0, 0.5)
-    battery = st.slider("Social Battery", 0.0, 1.0, 0.6)
+    mood_val = st.slider("😊 How's your mood?",        0.0, 1.0, 0.7)
+    sleep    = st.slider("😴 How well did you sleep?", 0.0, 1.0, 0.8)
+    hunger   = st.slider("🍕 How hungry are you?",     0.0, 1.0, 0.5)
+    battery  = st.slider("🔋 Social battery level?",   0.0, 1.0, 0.6)
 
-    if st.button("Predict Compatibility"):
+    if st.button("Calculate Our Vibe ✨"):
         features = np.array([[mood_val, sleep, hunger, battery]])
         score = model.predict(features)[0]
+        score = min(max(score, 0), 100)
 
-        st.markdown(f"<div class='glass'>"
-                    f"<b>Predicted Compatibility:</b> {score:.2f}%<br>"
-                    f"Cuddle Probability: {min(score+5,100):.1f}%<br>"
-                    f"</div>", unsafe_allow_html=True)
+        cuddle    = min(score + 5, 100)
+        hiss      = max(0, 100 - score)
+        kiss_prob = min(score * 1.1, 100)
+
+        if score >= 80:
+            emoji   = "🥰"
+            verdict = "Absolutely obsessed with each other right now"
+            vibe    = "Dangerous levels of cuteness incoming. Hold each other immediately."
+            color   = "#02c39a"
+        elif score >= 60:
+            emoji   = "😊"
+            verdict = "Pretty great actually"
+            vibe    = "Good vibes, soft energy. Perfect for a walk or watching something together."
+            color   = "#00a896"
+        elif score >= 40:
+            emoji   = "😐"
+            verdict = "Neutral but fixable"
+            vibe    = "Maybe eat something first. Food fixes everything."
+            color   = "#008080"
+        elif score >= 20:
+            emoji   = "😴"
+            verdict = "Someone needs a nap"
+            vibe    = "Low energy mode. Quiet time together still counts."
+            color   = "#006666"
+        else:
+            emoji   = "🙈"
+            verdict = "chaotic but we make it work"
+            vibe    = "Someone is hungry AND tired. Order food. Now."
+            color   = "#004d4d"
+
+        output_html  = "<div style='text-align:center; padding:30px; background:rgba(0,128,128,0.2); border-radius:20px; backdrop-filter:blur(12px); border:1px solid rgba(0,200,180,0.3);'>"
+        output_html += "<div style='font-size:64px; margin-bottom:10px;'>" + emoji + "</div>"
+        output_html += "<div style='font-size:28px; font-weight:700; color:" + color + "; margin-bottom:6px;'>" + f"{score:.1f}% Compatible" + "</div>"
+        output_html += "<div style='font-size:18px; color:#e0ffff; margin-bottom:20px; font-style:italic;'>" + verdict + "</div>"
+        output_html += "<div style='background:rgba(0,0,0,0.25); border-radius:20px; height:14px; margin:0 auto 24px auto; max-width:500px;'>"
+        output_html += "<div style='width:" + f"{score:.1f}" + "%; background:linear-gradient(90deg,#008080," + color + "); height:14px; border-radius:20px;'></div></div>"
+        output_html += "<div style='display:flex; justify-content:center; gap:16px; flex-wrap:wrap; margin-bottom:20px;'>"
+        output_html += "<div style='background:rgba(0,128,128,0.3); border:1px solid rgba(2,195,154,0.4); border-radius:50px; padding:8px 18px; font-size:14px; color:#e0ffff;'>🤗 Cuddle Prob: <b>" + f"{cuddle:.1f}%" + "</b></div>"
+        output_html += "<div style='background:rgba(0,128,128,0.3); border:1px solid rgba(2,195,154,0.4); border-radius:50px; padding:8px 18px; font-size:14px; color:#e0ffff;'>😼 Hiss Level: <b>" + f"{hiss:.1f}%" + "</b></div>"
+        output_html += "<div style='background:rgba(0,128,128,0.3); border:1px solid rgba(2,195,154,0.4); border-radius:50px; padding:8px 18px; font-size:14px; color:#e0ffff;'>💋 Kiss Prob: <b>" + f"{kiss_prob:.1f}%" + "</b></div>"
+        output_html += "</div>"
+        output_html += "<div style='background:rgba(0,80,80,0.4); border-radius:14px; padding:14px 20px; font-size:15px; color:#e0ffff; border:1px solid rgba(2,195,154,0.2);'>🩵 &nbsp; " + vibe + "</div>"
+        output_html += "</div>"
+
+        st.markdown(output_html, unsafe_allow_html=True)
