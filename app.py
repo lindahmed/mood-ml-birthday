@@ -3,7 +3,6 @@ import numpy as np
 import random
 from textblob import TextBlob # type: ignore
 from sklearn.linear_model import LinearRegression
-import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Tote's Birthday🎂",page_icon="❤️", layout="centered")
 
@@ -311,18 +310,16 @@ love_letters = [
      """,
 
     """Dear loml,
-I love the way your eyes light up when you talk about something you care about, the way
-you smile and look me in the eyes when we both know we want to kiss so much. And I adore 
-the smell of all of your perfumes and scents.
+I love the way your eyes light up when you talk about something you care about, the wayyou smile and look me in the eyes when we both know we want to kiss so much. And I adore the smell of all of your perfumes and scents.
 You make even the most normal days feel like something worth remembering.
 I really love spending every second with you!
 """,
 
     """To my favorite person,
-There's no one else I'd rather be annoying with.
+There's no one else I'd rather be myself with.
 You make me laugh harder and feel safer than anyone ever has.
 Thank you for existing.
-All my love 🩵""",
+""",
 
     """Hey baby,
 I was thinking about you today which honestly isn't new, I think about you all the time.
@@ -331,7 +328,7 @@ You are so deeply loved ya mina, even on the days you forget it.
 Love and miss you soo much❤️""",
 
     """My love,
-I don't have the right words for what you mean to me.
+I dont have the right words for what you mean to me.
 But I hope you feel it anyway, in every small thing I do, in every moment I choose you.
 You are my favorite chapter in life.
 """,
@@ -623,15 +620,3 @@ elif page == "😼 Compatibility Analyzer":
         ax.bar(["Compatibility"], [score])
         st.pyplot(fig)
 
-# -----------------------------
-# 🎬 Our Story
-# -----------------------------
-elif page == "🎬 Our Story":
-    st.header("Structured Story Generator")
-
-    memory = st.text_area("Describe a memory")
-    style = st.selectbox("Choose Style", ["Pixar", "2050", "Documentary"])
-
-    if st.button("Generate Story"):
-        story = generate_story(memory, style)
-        st.markdown(f"<div class='glass'>{story}</div>", unsafe_allow_html=True)
