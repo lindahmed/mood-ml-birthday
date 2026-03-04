@@ -341,21 +341,7 @@ Never forget that.
 """
 ]
 
-# -----------------------------
-# STORY GENERATOR
-# -----------------------------
-def generate_story(memory, style):
-    intros = {
-        "Pixar": "In a small corner of the universe,",
-        "2050": "Years from now, we will look back and remember,",
-        "Documentary": "According to relationship science,"
-    }
-    endings = [
-        "and that moment quietly changed everything.",
-        "and neither of them knew how important it would become.",
-        "and that was the beginning of something lasting."
-    ]
-    return f"{intros[style]} there was a moment when {memory}, {random.choice(endings)}"
+
 
 # -----------------------------
 # MOOD ANALYSIS
@@ -371,43 +357,38 @@ def mood_response(polarity):
         return {
             "type": "Devastated",
             "affirmation": "Just take a deep breath... Remeber nothing deserves to be angry. ",
-            "action": "Drink some water and breathe slowly till you are calm.",
-            "cat": "Angry Cats"
+            "action": "Drink some water and breathe slowly till you are calm."
+            
         }
     elif polarity < -0.3:
         return {
             "type": "Sad",
             "affirmation": "You don't have to carry everything alone.",
-            "action": "Wrap yourself in something warm and breathe slowly.",
-            "cat": "Even the softest cats still land on their feet."
+            "action": "Wrap yourself in something warm and breathe slowly."
         }
     elif polarity < -0.1:
         return {
             "type": "Anxious",
             "affirmation": "Everything will be okay i promise.",
-            "action": "Call me!!!",
-            "cat": "Worried cats need some hugs and they will be perfect."
+            "action": "Call me!!!"
         }
     elif polarity < 0:
         return {
             "type": "Low Energy",
             "affirmation": "It's okay to move gently today.",
-            "action": "Drink water and take a small break.",
-            "cat": "Even sleepy cats deserve long naps."
+            "action": "Drink water and take a small break."
         }
     elif polarity < 0.4:
         return {
             "type": "Good",
             "affirmation": "Steady days are the best days.",
-            "action": "Do one small thing that makes you smile.",
-            "cat": "Calm cats observe before they act."
+            "action": "Do one small thing that makes you smile."
         }
     else:
         return {
             "type": "Happy",
             "affirmation": "Your energy is beautiful today.",
-            "action": "Channel that into something creative.",
-            "cat": "Zoomie mode activated."
+            "action": "Channel that into something creative."
         }
 
 # -----------------------------
@@ -434,11 +415,14 @@ if not st.session_state.entered:
         value=date(2000, 1, 1)
     )
     
-    if st.button("Enter"):
-            st.session_state.entered = True
-            st.rerun()
-    st.stop()
-
+if st.button("Enter"):
+    if birthday == CORRECT_BIRTHDAY:    
+        st.session_state.entered = True
+        st.rerun()
+    else:
+        st.error("NOOOO TRY AGAIN DUMMY!😡")
+        
+st.stop()
 
 # -----------------------------
 # NAVIGATION
@@ -448,7 +432,6 @@ page = st.sidebar.radio("Navigate", [
     "💌 Love Letter Generator",
     "🐾 Mood Care Companion",
     "😼 Compatibility Analyzer",
-    "🎬 Our Story",
 ])
 
 # -----------------------------
@@ -540,7 +523,7 @@ if page == "🎂 Happy Birthday":
                 I truly wish you the happiest birthday ever, a one where you feel the most loved because you are.
                 Wishing you the happiest life as well, a life that we both dream of. 
                 No words will ever be enough for you, I feel like I want to keep writing till tomorrow.
-                But i will leave the rest of my feelings for another letters and more reminders for you, that you have my whole heart forever and always.
+                But i will leave the rest of my feelings for other letters and more reminders for you, that you have my whole heart forever and always.
         <br>
         I love you more than anything in the whole universe.❤️
     </p>
@@ -551,7 +534,6 @@ if page == "🎂 Happy Birthday":
         Thank you for letting me love you.<br>
         Happy birthday, my favourite person on earth.
     </p>
-    <div class='bday-footer'>forever yours 🩵</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -613,10 +595,4 @@ elif page == "😼 Compatibility Analyzer":
         st.markdown(f"<div class='glass'>"
                     f"<b>Predicted Compatibility:</b> {score:.2f}%<br>"
                     f"Cuddle Probability: {min(score+5,100):.1f}%<br>"
-                    f"Hiss Level: {max(0,100-score):.1f}%"
                     f"</div>", unsafe_allow_html=True)
-
-        fig, ax = plt.subplots()
-        ax.bar(["Compatibility"], [score])
-        st.pyplot(fig)
-
